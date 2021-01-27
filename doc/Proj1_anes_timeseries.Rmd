@@ -1,0 +1,200 @@
+---
+title: "Some vote patterns in different eras."
+output: html_notebook
+---
+
+![image source: https://trpl.libnet.info/voting-2454](../figs/vote image 3.png)
+
+## Introduction
+
+Every four years the US citizens will select their present by voting. Among different groups of people, their preferences in voting might be somehow different. In this analysis, I compared the voting patterns grouped by different education backgrounds in selected years. And I also display how the voting for major or minor third party changed over time. The major problems I tried to answer are:
+
+-Do people of different education backgrounds have preference in voting for specific party.
+
+-Do major or minor third parties get more votes now.
+
+
+```{r, echo=FALSE}
+library(haven)
+library(dplyr)
+library(ggplot2)
+```
+
+The American National Election Studies are surveys of the US voters from 1948 to 2016. It contains 59944 observations of 1029 variables. In this analysis I only variables about voting year, voting result, turnout and education backgrounds. Moreover, I only need the surveys taken in election years. Then convert the names of variables to meaningful variable names. Therefore, I selected the above variables and created a new dataset called anes_ts.
+
+```{r, echo=FALSE}
+#import data.
+anes_data <- read_sav("../data/anes_timeseries_cdf.sav")
+election_year = as.character(seq(1952,2016,by = 4))
+```
+
+```{r, echo=FALSE}
+#Create variable names that are understandable.
+anes_ts <- anes_data %>%
+  filter(VCF0004 %in% election_year)%>%
+  mutate(
+         year = as_factor(VCF0004),
+         vote_result = as_factor(VCF0706),
+         turnout = as_factor(VCF0703),
+         education = as_factor(VCF0140a)
+  )%>%
+    filter(!is.na(vote_result))%>%
+    filter(!is.na(turnout))
+
+
+levels(anes_ts$vote_result)
+```
+
+```{r, echo=FALSE}
+#Select variales that are needed.
+anes_ts = anes_ts%>%
+        dplyr::select(year, turnout, vote_result,education)
+
+```
+
+## Voting patterns in differenct education backgrounds.
+
+```{r,fig.width=12,fig.height=10,echo=FALSE}
+#Create histograms for the overall vote results in 1952-2016
+ggplot(data=anes_ts) +
+   geom_bar(aes(x=vote_result,fill=vote_result))+
+   facet_grid(~year)+
+   labs(title = "Overview",fill="Vote results")+
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.text=element_text(size=15))
+
+```
+
+First, lets investigate all the voting results based on this survey from 1952 to 2016. From the histogram above we can see that in 1960, 1976, 2004 and 2016 the numbers of votes for Democrat and Republican were similar. So I will investigate those four years. Because there was little advantages for the winning party, so the differences are likely to be more obvious.  Moreover, those four years can represent difference eras.
+
+```{r,fig.width=12,fig.height=10,echo=FALSE}
+anes_1960 <- anes_ts%>%
+  dplyr::filter((year == 1960)&(!is.na(turnout)))%>%
+  dplyr::filter((vote_result== "1. Democrat")|(vote_result == "2. Republican")|(vote_result == "7. Did not vote or voted but not for president (exc.1972)"))
+
+
+ggplot(data=anes_1960) +
+   geom_bar(aes(x=vote_result,fill=vote_result))+
+   facet_grid(~education)+
+   theme(strip.text.x = element_text(size = 12, angle = 90))+
+   labs(title = "1960",fill="Vote results")+
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.text=element_text(size=15))+
+  scale_x_discrete(labels = abbreviate)
+```
+First let us look at the results in 1960. For people finished less than 8 degrees to people finished 12 degrees, diploma or equivalency, they preferred Democrat. For people with higher degrees than 12 degrees, they loved republican. Especially among people with a college degree or higher degrees, Republican had a huge advantage. The ratio of people who did not vote decreased when the degrees increased.
+
+
+```{r,fig.width=12,fig.height=10,echo=FALSE}
+anes_1976 <- anes_ts%>%
+  dplyr::filter((year == 1976)&(!is.na(turnout)))%>%
+  dplyr::filter((vote_result== "1. Democrat")|(vote_result == "2. Republican")|(vote_result == "7. Did not vote or voted but not for president (exc.1972)"))
+
+
+ggplot(data=anes_1976) +
+   geom_bar(aes(x=vote_result,fill=vote_result))+
+   facet_grid(~education)+
+   theme(strip.text.x = element_text(size = 12, angle = 90))+
+   labs(title = "1976",fill="Vote results")+
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.text=element_text(size=15))+
+  scale_x_discrete(labels = abbreviate)
+        
+```
+In year 1976 the voting preferences were very similar as those in 1960. However, since it became easier for people to get a relatively high education degrees, the responses in college degrees or higher increased a lot.
+
+
+```{r,fig.width=12,fig.height=10,echo=FALSE}
+
+anes_2004 <- anes_ts%>%
+  dplyr::filter((year == 2004)&(!is.na(turnout)))%>%
+  dplyr::filter((vote_result== "1. Democrat")|(vote_result == "2. Republican")|(vote_result == "7. Did not vote or voted but not for president (exc.1972)"))
+
+
+ggplot(data=anes_2004) +
+   geom_bar(aes(x=vote_result,fill=vote_result))+
+   facet_grid(~education)+
+   theme(strip.text.x = element_text(size = 12, angle = 90))+
+   labs(title = "2004",fill="Vote results")+
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.text=element_text(size=15))+
+  scale_x_discrete(labels = abbreviate)
+```
+
+Came to 2004, Republican still had some advantages among people in 12 degrees to BA level degrees. But for people with advanced degrees, which is the highest degrees, their preferences changed from Republican to Democrat.
+
+```{r,fig.width=12,fig.height=10,echo=FALSE}
+anes_2016 <- anes_ts%>%
+  dplyr::filter((year == 2016)&(!is.na(turnout)))%>%
+  dplyr::filter((vote_result== "1. Democrat")|(vote_result == "2. Republican")|(vote_result == "7. Did not vote or voted but not for president (exc.1972)"))
+
+ggplot(data=anes_2016) +
+   geom_bar(aes(x=vote_result,fill=vote_result))+
+   facet_grid(~education)+
+   theme(strip.text.x = element_text(size = 12, angle = 90))+
+   labs(title = "Income",fill="Vote results")+
+    theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.text=element_text(size=15))+
+  scale_x_discrete(labels = abbreviate)
+```
+However for the most recent election year in this dataset, the advantages of Republican in high education levels have disappeared. By contrary, democrat had a huge advantage among people with advanced degrees and a small advantage among people with BA level degrees.
+
+
+
+
+## Favors in major or minor parties.
+
+I added two new variables to anes_ts which are "third" and "no_vote". "third" has two factors which are voting for "1.Major or minor third party" or voting for "2.Other". And "no_vote" shows whether this people voted or not.
+
+```{r,echo=FALSE}
+anes_ts$third <- ifelse((anes_ts$vote_result == "3. Major third party candidate (Wallace 1968/Anderson" )| ((anes_ts$vote_result == "4. Other (incl. 3d/minor party candidates and write-ins)")), "1.Major or minor third party", "2.Other")
+
+anes_ts$no_vote <- ifelse(anes_ts$vote_result == "7. Did not vote or voted but not for president (exc.1972)", "Did not vote", "Voted")
+save(anes_ts, file="../output/anes_ts.RData")
+```
+
+
+```{r,echo=FALSE}
+anes_third_count <- anes_third %>%
+   dplyr::filter(anes_third$third == "1.Major or minor third party")
+anes_DR_count <- anes_third %>%
+   dplyr::filter(anes_third$third == "2.Other")
+
+barplot(table(anes_ts$turnout, anes_ts$year), main = "Rsponses")
+barplot(table(anes_DR_count$third,anes_DR_count$year),col = "light blue", main = "Votes for Democrat and Republican")
+barplot(table(anes_third_count$third,anes_third_count$year),col = "pink", main = "Votes for major and minor parties")
+```
+
+Except for year 2012 and 2016 there is no significant increases in the total responses in this survey. Similarly, the total numbers of votes in this survey for Democrat or Republican have the same shape as the total number of response from 1952 to 2016. However, the votes for major or minor third parties does not have the same shape as the total numbers of responses. Hence, I need to investigates the ratio of votes for major or minor parties in each year.
+
+```{r,fig.width=12,fig.height=10,echo=FALSE}
+ggplot(data=anes_ts, aes(x=year,fill=factor(third))) +
+   geom_bar(position = "fill")+
+   labs(title = "Ratio of voted",fill="Vote results", y="ratio")
+```
+Based on the ratio of votes for major or minor third parties, there was a significant increases in votes for major or minor third parties in 1988. Other than that year, there were only some small fluctuations of the ratio and no obvious increase or decrease. 
+
+```{r,fig.width=12,fig.height=10,echo=FALSE}
+ggplot(data=anes_ts, aes(x=year,fill=factor(turnout))) +
+   geom_bar(position = "fill")+
+   labs(title = "Ratio of Third Parties",fill="Vote results",y="ratio")
+```
+Additionally, in 1988 - 2016 there is a small increase in the ratio of voted each year. But this does not help to increase the ratio of votes in major or minor parties.
+
+## Conclusion
+
+1.People of different education backgrounds generally have different preference for Democrat or Republican. However, those preference are totally different in different eras. Generally speaking, people with higher education levels favored republican in the past. However, more people with higher education levels voted for democrats in recent elections.
+
+2.There is no significant difference between votes in major or minor parties bewteen difference years.
+
+![image source:https://eccles.utah.edu/news/why-voting-is-important-as-a-student/](../figs/vote-for-blog.jpg)
