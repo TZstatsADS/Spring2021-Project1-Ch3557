@@ -1,6 +1,8 @@
 ---
 title: "Some vote patterns in different eras."
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 ![image source: https://trpl.libnet.info/voting-2454](../figs/vote image 3.png)
@@ -20,7 +22,7 @@ library(dplyr)
 library(ggplot2)
 ```
 
-The American National Election Studies are surveys of the US voters from 1948 to 2016. It contains 59944 observations of 1029 variables. In this analysis I only variables about voting year, voting result, turnout and education backgrounds. Moreover, I only need the surveys taken in election years. Then convert the names of variables to meaningful variable names. Therefore, I selected the above variables and created a new dataset called anes_ts.
+The American National Election Studies are surveys of the US voters from 1948 to 2016. It contains 59944 observations of 1029 variables. In this analysis I only variables about voting year, voting result, turnout and education backgrounds. Moreover, I only need the surveys taken in election years. Then convert the names of variables to meaningful variable names. Therefore, I selected the above variables and created a new dataset called anes_ts. Exclude those observations with no vote results.
 
 ```{r, echo=FALSE}
 #import data.
@@ -41,8 +43,6 @@ anes_ts <- anes_data %>%
     filter(!is.na(vote_result))%>%
     filter(!is.na(turnout))
 
-
-levels(anes_ts$vote_result)
 ```
 
 ```{r, echo=FALSE}
@@ -67,7 +67,7 @@ ggplot(data=anes_ts) +
 
 ```
 
-First, lets investigate all the voting results based on this survey from 1952 to 2016. From the histogram above we can see that in 1960, 1976, 2004 and 2016 the numbers of votes for Democrat and Republican were similar. So I will investigate those four years. Because there was little advantages for the winning party, so the differences are likely to be more obvious.  Moreover, those four years can represent difference eras.
+First, let us investigate all the voting results based on this survey from 1952 to 2016. From the histogram above we can see that in 1960, 1976, 2004 and 2016 the numbers of votes for Democrat and Republican were similar. So I will investigate those four years. Because there were little advantages for the winning party, so the differences are likely to be more obvious.  Moreover, those four years can represent difference eras.
 
 ```{r,fig.width=12,fig.height=10,echo=FALSE}
 anes_1960 <- anes_ts%>%
@@ -86,8 +86,7 @@ ggplot(data=anes_1960) +
         legend.text=element_text(size=15))+
   scale_x_discrete(labels = abbreviate)
 ```
-First let us look at the results in 1960. For people finished less than 8 degrees to people finished 12 degrees, diploma or equivalency, they preferred Democrat. For people with higher degrees than 12 degrees, they loved republican. Especially among people with a college degree or higher degrees, Republican had a huge advantage. The ratio of people who did not vote decreased when the degrees increased.
-
+The above histogram is the voting results in 1960. For people finished less than 8 degrees to people finished 12 degrees, diploma or equivalency, they preferred Democrat. For people with higher degrees than 12 degrees, they favored republican more. Especially among people with a college degree or higher degrees, Republican had a huge advantage. The ratio of people who did not vote decreased when the degrees increased.
 
 ```{r,fig.width=12,fig.height=10,echo=FALSE}
 anes_1976 <- anes_ts%>%
@@ -165,17 +164,18 @@ save(anes_ts, file="../output/anes_ts.RData")
 
 
 ```{r,echo=FALSE}
-anes_third_count <- anes_third %>%
-   dplyr::filter(anes_third$third == "1.Major or minor third party")
-anes_DR_count <- anes_third %>%
-   dplyr::filter(anes_third$third == "2.Other")
+#Create two small datasets that contain votes for major and minor third parties and votes for democrat or republican respectively.
+anes_third_count <- anes_ts %>%
+   dplyr::filter(anes_ts$third == "1.Major or minor third party")
+anes_DR_count <- anes_ts %>%
+   dplyr::filter((anes_ts$vote_result == "1. Democrat")|(anes_ts$vote_result == "2. Republican"))
 
 barplot(table(anes_ts$turnout, anes_ts$year), main = "Rsponses")
-barplot(table(anes_DR_count$third,anes_DR_count$year),col = "light blue", main = "Votes for Democrat and Republican")
+barplot(table(anes_DR_count$third,anes_DR_count$year),col = "light blue", main = "Votes for Democrat or Republican")
 barplot(table(anes_third_count$third,anes_third_count$year),col = "pink", main = "Votes for major and minor parties")
 ```
 
-Except for year 2012 and 2016 there is no significant increases in the total responses in this survey. Similarly, the total numbers of votes in this survey for Democrat or Republican have the same shape as the total number of response from 1952 to 2016. However, the votes for major or minor third parties does not have the same shape as the total numbers of responses. Hence, I need to investigates the ratio of votes for major or minor parties in each year.
+Except for year 2012 and 2016 there is no significant increase in the total responses in this survey. Similarly, the total numbers of votes in this survey for Democrat or Republican have the same shape as the total number of response from 1952 to 2016. However, the votes for major or minor third parties does not have the same shape as the total numbers of responses. Hence, I need to investigates the ratio of votes for major or minor parties in each year.
 
 ```{r,fig.width=12,fig.height=10,echo=FALSE}
 ggplot(data=anes_ts, aes(x=year,fill=factor(third))) +
@@ -189,12 +189,12 @@ ggplot(data=anes_ts, aes(x=year,fill=factor(turnout))) +
    geom_bar(position = "fill")+
    labs(title = "Ratio of Third Parties",fill="Vote results",y="ratio")
 ```
-Additionally, in 1988 - 2016 there is a small increase in the ratio of voted each year. But this does not help to increase the ratio of votes in major or minor parties.
+Additionally, in 1988 - 2016 there is a small increase in the ratio of voted each year. But this does not help in increasing the ratio of votes in major or minor parties.
 
 ## Conclusion
 
 1.People of different education backgrounds generally have different preference for Democrat or Republican. However, those preference are totally different in different eras. Generally speaking, people with higher education levels favored republican in the past. However, more people with higher education levels voted for democrats in recent elections.
 
-2.There is no significant difference between votes in major or minor parties bewteen difference years.
+2.There is no significant difference between votes in major or minor third parties between difference years.
 
 ![image source:https://eccles.utah.edu/news/why-voting-is-important-as-a-student/](../figs/vote-for-blog.jpg)
